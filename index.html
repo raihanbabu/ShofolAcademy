@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bangladesh SSC GPA Calculator</title>
+  <title>Shofol Academy SSC GPA Calculator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
@@ -28,6 +28,7 @@
       --warn-border: #b45309;
       --bad-bg: rgba(220,38,38,.1);
       --bad-border: #b91c1c;
+      --hero-bg: #e0f2fe;
     }
     [data-theme="dark"] {
       --bg: #0f172a;
@@ -51,74 +52,256 @@
       --warn-border: #3a2f12;
       --bad-bg: rgba(239,68,68,.08);
       --bad-border: #3a1212;
+      --hero-bg: #164e63;
     }
-    * { box-sizing: border-box }
+    * { box-sizing: border-box; margin: 0; padding: 0 }
     body {
-      margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
       background: linear-gradient(180deg, var(--bg), var(--bg));
       color: var(--text);
+      padding-top: 50px;
+      width: 100%;
     }
-    .wrap { max-width: 1100px; margin: 40px auto; padding: 0 16px }
+    .header {
+      background: #f7faff;
+      /*padding: 10px;*/
+      text-align: center;
+    }
+
+    .wrap {
+      max-width: 100%;
+      margin: 0 auto;
+      width: 100%;
+    }
     .card {
-      background: linear-gradient(180deg, var(--card), var(--card));
-      border: 1px solid var(--border);
-      padding: 24px;
-      border-radius: 18px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+      background: #f7faff;
+      padding: 16px;
+      border-radius: 12px;
+      margin: 0;
     }
-    h1 { font-size: 28px; margin: 0 0 6px }
-    p.lead { margin: 0 0 18px; color: var(--muted) }
-    .grid { display: grid; gap: 12px }
-    @media(min-width:900px) { .grid { grid-template-columns: repeat(2,1fr) } }
-    table { width: 100%; border-collapse: separate; border-spacing: 0 8px }
-    thead th { font-weight: 600; color: var(--muted); text-align: left; padding: 6px 10px }
-    tbody tr { background: var(--pill-bg); border-radius: 12px }
-    tbody td { padding: 10px }
-    tbody tr td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px }
-    tbody tr td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px }
-    select { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 10px 12px; border-radius: 10px; outline: none }
+    h1 { font-size: 24px; margin: 0 0 6px }
+    p.lead { margin: 0 0 16px; color: var(--muted); text-align: center }
+    table { width: 100%; border-collapse: collapse; border-spacing: 0 }
+    thead th { font-weight: 600; color: var(--muted); text-align: left; padding: 6px }
+    tbody tr { background: var(--pill-bg); border-radius: 8px }
+    tbody td { padding: 8px }
+    tbody tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px }
+    tbody tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px }
+    select { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 6px; border-radius: 8px; outline: none; font-size: 14px }
     input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); transform: scale(1.1) }
     .muted { color: var(--muted) }
-    .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px }
-    button { background: linear-gradient(90deg, var(--accent), var(--accent)); color: #02131a; border: none; padding: 12px 16px; border-radius: 12px; font-weight: 700; cursor: pointer }
-    button.secondary { background: var(--secondary-bg); color: var(--text); border: 1px solid var(--secondary-border) }
-    .results { display: grid; gap: 12px; margin-top: 18px }
-    .pill { padding: 12px 14px; border-radius: 12px; background: var(--pill-bg); border: 1px solid var(--pill-border) }
+    .controls {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 10px;
+    }
+    button {
+      background: linear-gradient(90deg, var(--accent), var(--accent));
+      color: #02131a;
+      border: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+    }
+    button.secondary {
+      background: var(--secondary-bg);
+      color: var(--text);
+      border: 1px solid var(--secondary-border);
+    }
+    #csvBtn, #pdfBtn { display: none }
+    .results { display: grid; gap: 10px;width: 100%;max-width: 400px;}
+    .pill { padding: 10px 12px; border-radius: 8px; background: var(--pill-bg); border: 1px solid var(--pill-border) }
     .good { border-color: var(--good-border); background: var(--good-bg) }
     .warn { border-color: var(--warn-border); background: var(--warn-bg) }
     .bad { border-color: var(--bad-border); background: var(--bad-bg) }
-    .note { font-size: 13px; color: var(--muted) }
-    .small { font-size: 13px }
-    .footer { margin-top: 10px; color: var(--muted); font-size: 12px }
+    .note { font-size: 12px; color: var(--muted) }
+    .small { font-size: 12px }
+    .footer { margin-top: 10px; color: var(--muted); font-size: 12px; text-align: center }
+    .site-footer {
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 15px 10px;
+      text-align: center;
+    }
+    .site-footer .logo {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .site-footer p { margin: 4px 0; color: var(--muted) }
+    .site-footer a { color: var(--accent); text-decoration: none }
     .highlight { color: var(--accent) }
-    .toggle-label { display: flex; align-items: center; gap: 8px; color: var(--text); margin-top: 12px }
-    .theme-toggle { margin-left: auto; padding: 8px 12px; font-size: 14px }
-    .category-select { margin-bottom: 16px; max-width: 200px }
+    .toggle-label { display: flex; align-items: center; gap: 6px; color: var(--text); margin-top: 10px }
+    .theme-toggle { padding: 4px 8px; font-size: 10px }
+    .category-select { margin-bottom: 12px; width: 100%; max-width: 100% }
+
+
+    /* Mobile Responsiveness */
+    @media (max-width: 600px) {
+      .header {
+        text-align: center;
+      }
+      .header .logo, .header h1, .header .theme-toggle {
+        margin: 4px 0;
+      }
+      .wrap { padding: 0 }
+      .card { padding: 0 }
+      table { font-size: 14px }
+      thead th, tbody td { padding: 6px }
+      button { padding: 8px; font-size: 14px }
+      .results { font-size: 14px }
+      .pill { padding: 8px }
+      .site-footer .logo { font-size: 14px }
+      .site-footer p { font-size: 10px }
+    }
+
+    /* Desktop Padding */
+    @media (min-width: 600px) {
+      .card { padding: 50px 20px }
+      .site-footer { padding: 20px 10px }
+    }
+
+    /* Customize */
+    body {
+      padding-top: 0;
+    }
+    .hero {
+        background: #eeebed;
+        text-align: center;
+    }
+    .hero img {
+        width: 100%;
+        max-width: 600px;
+    }
+
+
+  .title-hero {
+      text-align: center;
+      background: #f7faff;
+      padding: 50px 0 0 0;
+  }
+
+  .title-hero a {
+      color: #0891b2;
+      font-size: 42px;
+      text-decoration: none;
+      font-weight: bold;
+  }
+
+
+    .grid {
+        gap: 12px;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        max-width: 1200px;
+        margin: auto;
+        margin-bottom: 20px;
+    }
+    .grid .card {
+        width: 100%;background: #eaedf2;box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    }
+    button#themeBtn {
+        width: 150px;
+        padding: 14px;
+        font-size: 14px;
+    }
+    button#calcBtn {
+        color: #fff;
+    }
+    select#categorySelect {
+        max-width: 320px;
+        margin-top: 20px;
+        margin-bottom: 40px;
+        border-radius: 4px;
+        padding: 8px;
+        background: #0891b2;
+        color: #ffffff;
+        font-size: 16px;
+    }
+
+    .footer {
+      margin-top: 40px;
+    }
+      .footer p.lead  {
+        font-size: 16px;
+        margin-top: 20px;
+      }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 600px) {
+      .grid {
+          display: block;
+      }
+      .grid .card,
+      .grid .results {
+          width: 100%;
+      }
+      .title-hero a {
+        font-size: 24px;
+      }
+      .title-hero p {
+        padding: 10px 0;
+      }
+      .footer p.lead span {
+          display: block;
+          padding: 16px 6px;
+      }
+    }
+
+    .top-promotion {
+      padding: 16px 10px;
+      text-align: center;
+      background-color: #9c579b;
+      color: #ffffff;
+    }
+    .top-promotion a {
+      color: #ffffff;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div style="display: flex; align-items: center;">
-        <h1>বাংলাদেশ এসএসসি জিপিএ ক্যালকুলেটর</h1>
-        <button class="secondary theme-toggle" id="themeBtn">Dark Theme</button>
-      </div>
-      <p class="lead">১০টি বিষয় নির্বাচন করুন: ৯টি প্রধান বিষয় এবং <b>১টি চতুর্থ (ঐচ্ছিক) বিষয়</b>। জিপিএ ৫.০০ এর মধ্যে গণনা করা হয়।
-        <br><span class="small">চতুর্থ বিষয়ের নিয়ম: যদি গ্রেড পয়েন্ট <b>≥ ৩.০</b> হয়, তবে <b>(পয়েন্ট − ২)</b> যোগ করা হয়। যদি < ৩.০ হয়, কোনো বোনাস যোগ হয় না।</span>
-      </p>
 
-      <div>
+  <div class="top-promotion">
+    <p>আমরা <b>HSC ICT পড়াই</b> — সহজভাবে, প্র্যাকটিক্যালভাবে। 📞 যোগাযোগ: <a href="tel:8801862521286">01862-521286</a>, <a href="tel:8801777132423">01777-132423</a></p>
+  </div>
+
+  <div class="hero">
+    <img src="https://eliteabu.com/wp-content/uploads/2025/08/shofol-academy-cover.png">
+  </div>
+
+  <div class="header">
+    <!-- Please don't remove below line -->
+    <button class="secondary theme-toggle" id="themeBtn" style="display: none;">Dark Theme</button>
+    <!-- //Please don't remove top line -->
+
+  </div>
+
+  <div class="wrap">
+
+
+    <div class="title-hero">
+      <a href="https://www.facebook.com/shofol.academy" target="_blank">SSC Point Calculator (With & Without 4th Subject)</a>
+        <p>Your trusted partner for SSC preparation and ICT education</p>
+    </div>
+
+    <div class="card">
+      
+      <div style="text-align: center;">
         <select id="categorySelect" class="category-select">
-          <option value="none" selected>Select Category</option>
-          <option value="science">Science</option>
-          <option value="arts">Arts</option>
-          <option value="commerce">Commerce</option>
+          <option value="none" selected>Select Group</option>
+          <option value="science">Science/বিজ্ঞান</option>
+          <option value="arts"> Humanities/মানবিক</option>
+          <option value="commerce">Business Studies/ব্যবসায় শিক্ষা</option>
         </select>
       </div>
 
       <div class="grid">
-        <div class="card" style="padding:16px">
+        <div class="card" style="padding:10px">
           <table>
             <thead>
               <tr>
@@ -133,8 +316,8 @@
           <div class="controls">
             <button id="calcBtn">জিপিএ গণনা</button>
             <button class="secondary" id="resetBtn">রিসেট</button>
-            <button style="display: none;" class="secondary" id="csvBtn">CSV ডাউনলোড</button>
-            <button style="display: none;" class="secondary" id="pdfBtn">PDF ডাউনলোড</button>
+            <button class="secondary" id="csvBtn">CSV ডাউনলোড</button>
+            <button class="secondary" id="pdfBtn">PDF ডাউনলোড</button>
           </div>
           <label class="toggle-label">
             <input type="checkbox" id="toggleFourth" checked>
@@ -149,11 +332,11 @@
           </div>
           <div class="pill" id="without4th">
             <div><b>চতুর্থ বিষয় ছাড়া জিপিএ</b> <span class="small muted">(৯টি প্রধান বিষয়ের যোগফল ÷ ৯)</span></div>
-            <div id="gpaBase" style="font-size:28px;margin-top:4px">—</div>
+            <div id="gpaBase" style="font-size:24px;margin-top:4px">—</div>
           </div>
           <div class="pill" id="with4th">
             <div><b>চতুর্থ বিষয়ের নিয়ম সহ জিপিএ</b> <span class="small muted">(+বোনাস তারপর ÷ ৯)</span></div>
-            <div id="gpaWith" style="font-size:28px;margin-top:4px">—</div>
+            <div id="gpaWith" style="font-size:24px;margin-top:4px">—</div>
             <div class="note" id="bonusNote"></div>
           </div>
         </div>
@@ -161,7 +344,21 @@
 
       <div class="footer">
         গ্রেড ম্যাপিং: A+ = ৫.০, A = ৪.০, A- = ৩.৫, B = ৩.০, C = ২.০, D = ১.০, F = ০.০। যদি ৯টি প্রধান বিষয়ের মধ্যে কোনোটিতে F থাকে, জিপিএ = ০.০০।
+        
+        <p class="lead">১০টি বিষয় নির্বাচন করুন: ৯টি প্রধান বিষয় এবং <b>১টি চতুর্থ (ঐচ্ছিক) বিষয়</b>। জিপিএ ৫.০০ এর মধ্যে গণনা করা হয়।
+        <br><span class="small">চতুর্থ বিষয়ের নিয়ম: যদি গ্রেড পয়েন্ট <b>≥ ৩.০</b> হয়, তবে <b>(পয়েন্ট − ২)</b> যোগ করা হয়। যদি < ৩.০ হয়, কোনো বোনাস যোগ হয় না।</span>
+      </p>
+
       </div>
+    </div>
+
+    <div class="site-footer">
+      <span class="logo"><a href="https://www.facebook.com/shofol.academy" target="_blank">Shofol Academy</a></span>
+      <p><b>Teachers:</b> <a href="https://www.facebook.com/raihanbabubd" target="_blank">Raihan</a> & <a href="https://www.facebook.com/ashimmollick.choto" target="_blank">Ashim</a> (01862521286, 01777132423)</p>
+      <p><b>Team Members:</b> <a href="https://www.facebook.com/raihanbabubd" target="_blank">Raihan</a> & <a href="https://www.facebook.com/ashimmollick.choto" target="_blank">Ashim</a></p>
+      <p><b>আমরা HSC ICT পড়াই — সহজভাবে, প্র্যাকটিক্যালভাবে।</b></p>
+      <p><a href="https://www.facebook.com/raihanbabubd" target="_blank">Contribution by Raihan</a></p>
+      <p><a href="https://www.facebook.com/shofol.academy" target="_blank">Visit us on Facebook</a></p>
     </div>
   </div>
 
@@ -199,12 +396,15 @@
         'History Of Bangladesh & World Civilization',
         'Geography And Environment',
         'Economics',
-        'Sociology'
+        'Sociology',
+        'Others'
       ],
       'Commerce': [
-        'Accountancy',
-        'Business Studies',
-        'Environmental Studies'
+        'Science',
+        'Business Entrepreneurship',
+        'Accounting',
+        'Finance And Banking',
+        'Others'
       ],
       'Fourth Subject': [
         'Higher Mathematics',
@@ -241,13 +441,13 @@
         'Bangla',
         'English',
         'Mathematics',
-        'Information & Communication Technology',
+        'Science',
         'Islam & Moral Education',
-        'Accountancy',
-        'Business Studies',
-        'Environmental Studies',
-        'Economics',
-        'Higher Mathematics'
+        'Business Entrepreneurship',
+        'Accounting',
+        'Finance And Banking',
+        'Information & Communication Technology',
+        'Agriculture Studies'
       ]
     };
 
@@ -302,7 +502,6 @@
       return tr;
     }
 
-    // Build 10 rows with no default subjects initially
     function initializeRows() {
       rowsEl.innerHTML = '';
       for (let i = 0; i < 10; i++) {
@@ -312,7 +511,6 @@
     }
     initializeRows();
 
-    // Update rows based on category
     function updateRowsForCategory(category) {
       rowsEl.innerHTML = '';
       const subjects = defaultSubjects[category] || Array(10).fill('Select Subject');
@@ -440,24 +638,26 @@
       const { data, gpaBase, gpaWith, bonus, sumMain } = result;
       const doc = new jsPDF();
       doc.setFontSize(16);
-      doc.text('বাংলাদেশ এসএসসি জিপিএ রিপোর্ট', 20, 20);
+      doc.text('<a href="https://www.facebook.com/shofol.academy" target="_blank">Shofol Academy</a> SSC GPA Report', 10, 20);
       doc.setFontSize(12);
       let y = 30;
-      doc.text('বিষয়ের তালিকা:', 20, y);
+      doc.text('Subject List:', 10, y);
       y += 10;
       data.forEach((d, i) => {
-        doc.text(`${i + 1}. ${d.name}: ${d.grade} (${d.pts.toFixed(1)} পয়েন্ট)${d.isFourth ? ' (চতুর্থ বিষয়)' : ''}`, 20, y);
+        doc.text(`${i + 1}. ${d.name}: ${d.grade} (${d.pts.toFixed(1)} Points)${d.isFourth ? ' (Fourth Subject)' : ''}`, 10, y);
         y += 8;
       });
       y += 5;
-      doc.text(`প্রধান বিষয়ের যোগফল: ${sumMain.toFixed(1)}`, 20, y);
+      doc.text(`Main Subjects Sum: ${sumMain.toFixed(1)}`, 10, y);
       y += 8;
-      doc.text(`চতুর্থ বিষয়ের বোনাস: ${bonus.toFixed(1)}`, 20, y);
+      doc.text(`Fourth Subject Bonus: ${bonus.toFixed(1)}`, 10, y);
       y += 8;
-      doc.text(`চতুর্থ বিষয় ছাড়া জিপিএ: ${gpaBase.toFixed(2)}`, 20, y);
+      doc.text(`GPA without Fourth: ${gpaBase.toFixed(2)}`, 10, y);
       y += 8;
-      doc.text(`চতুর্থ বিষয়ের নিয়ম সহ জিপিএ: ${gpaWith.toFixed(2)}`, 20, y);
-      doc.save('ssc_gpa_results.pdf');
+      doc.text(`GPA with Fourth: ${gpaWith.toFixed(2)}`, 10, y);
+      y += 10;
+      doc.text('Powered by <a href="https://www.facebook.com/shofol.academy" target="_blank">Shofol Academy</a> - আমরা HSC ICT পড়াই — সহজভাবে, প্র্যাকটিক্যালভাবে।', 10, y);
+      doc.save('shofol_academy_ssc_gpa_results.pdf');
     });
 
     toggleFourth.addEventListener('change', () => {
@@ -487,4 +687,3 @@
   </script>
 </body>
 </html>
-
