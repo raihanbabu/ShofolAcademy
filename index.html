@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bangladesh SSC GPA Calculator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --text: #1f2937;
+      --accent: #0891b2;
+      --good: #16a34a;
+      --warn: #d97706;
+      --bad: #dc2626;
+      --border: #d1d5db;
+      --input-bg: #f9fafb;
+      --input-border: #d1d5db;
+      --secondary-bg: #f3f4f6;
+      --secondary-border: #d1d5db;
+      --pill-bg: rgba(0,0,0,.05);
+      --pill-border: #d1d5db;
+      --good-bg: rgba(22,163,74,.1);
+      --good-border: #15803d;
+      --warn-bg: rgba(217,119,6,.1);
+      --warn-border: #b45309;
+      --bad-bg: rgba(220,38,38,.1);
+      --bad-border: #b91c1c;
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --card: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #22d3ee;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --border: #1f2937;
+      --input-bg: #0b1222;
+      --input-border: #23304a;
+      --secondary-bg: #0b1222;
+      --secondary-border: #22304a;
+      --pill-bg: rgba(255,255,255,.04);
+      --pill-border: #1f2a44;
+      --good-bg: rgba(34,197,94,.08);
+      --good-border: #1d3e2a;
+      --warn-bg: rgba(245,158,11,.08);
+      --warn-border: #3a2f12;
+      --bad-bg: rgba(239,68,68,.08);
+      --bad-border: #3a1212;
+    }
+    * { box-sizing: border-box }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+      background: linear-gradient(180deg, var(--bg), var(--bg));
+      color: var(--text);
+    }
+    .wrap { max-width: 1100px; margin: 40px auto; padding: 0 16px }
+    .card {
+      background: linear-gradient(180deg, var(--card), var(--card));
+      border: 1px solid var(--border);
+      padding: 24px;
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    }
+    h1 { font-size: 28px; margin: 0 0 6px }
+    p.lead { margin: 0 0 18px; color: var(--muted) }
+    .grid { display: grid; gap: 12px }
+    @media(min-width:900px) { .grid { grid-template-columns: repeat(2,1fr) } }
+    table { width: 100%; border-collapse: separate; border-spacing: 0 8px }
+    thead th { font-weight: 600; color: var(--muted); text-align: left; padding: 6px 10px }
+    tbody tr { background: var(--pill-bg); border-radius: 12px }
+    tbody td { padding: 10px }
+    tbody tr td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px }
+    tbody tr td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px }
+    select { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 10px 12px; border-radius: 10px; outline: none }
+    input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); transform: scale(1.1) }
+    .muted { color: var(--muted) }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px }
+    button { background: linear-gradient(90deg, var(--accent), var(--accent)); color: #02131a; border: none; padding: 12px 16px; border-radius: 12px; font-weight: 700; cursor: pointer }
+    button.secondary { background: var(--secondary-bg); color: var(--text); border: 1px solid var(--secondary-border) }
+    .results { display: grid; gap: 12px; margin-top: 18px }
+    .pill { padding: 12px 14px; border-radius: 12px; background: var(--pill-bg); border: 1px solid var(--pill-border) }
+    .good { border-color: var(--good-border); background: var(--good-bg) }
+    .warn { border-color: var(--warn-border); background: var(--warn-bg) }
+    .bad { border-color: var(--bad-border); background: var(--bad-bg) }
+    .note { font-size: 13px; color: var(--muted) }
+    .small { font-size: 13px }
+    .footer { margin-top: 10px; color: var(--muted); font-size: 12px }
+    .highlight { color: var(--accent) }
+    .toggle-label { display: flex; align-items: center; gap: 8px; color: var(--text); margin-top: 12px }
+    .theme-toggle { margin-left: auto; padding: 8px 12px; font-size: 14px }
+    .category-select { margin-bottom: 16px; max-width: 200px }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div style="display: flex; align-items: center;">
+        <h1>বাংলাদেশ এসএসসি জিপিএ ক্যালকুলেটর</h1>
+        <button class="secondary theme-toggle" id="themeBtn">Dark Theme</button>
+      </div>
+      <p class="lead">১০টি বিষয় নির্বাচন করুন: ৯টি প্রধান বিষয় এবং <b>১টি চতুর্থ (ঐচ্ছিক) বিষয়</b>। জিপিএ ৫.০০ এর মধ্যে গণনা করা হয়।
+        <br><span class="small">চতুর্থ বিষয়ের নিয়ম: যদি গ্রেড পয়েন্ট <b>≥ ৩.০</b> হয়, তবে <b>(পয়েন্ট − ২)</b> যোগ করা হয়। যদি < ৩.০ হয়, কোনো বোনাস যোগ হয় না।</span>
+      </p>
+
+      <div>
+        <select id="categorySelect" class="category-select">
+          <option value="none" selected>Select Category</option>
+          <option value="science">Science</option>
+          <option value="arts">Arts</option>
+          <option value="commerce">Commerce</option>
+        </select>
+      </div>
+
+      <div class="grid">
+        <div class="card" style="padding:16px">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40%">বিষয়ের নাম</th>
+                <th style="width:30%">গ্রেড</th>
+                <th style="width:20%">চতুর্থ বিষয়?</th>
+                <th style="width:10%" class="muted">পয়েন্ট</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <div class="controls">
+            <button id="calcBtn">জিপিএ গণনা</button>
+            <button class="secondary" id="resetBtn">রিসেট</button>
+            <button class="secondary" id="csvBtn">CSV ডাউনলোড</button>
+            <button class="secondary" id="pdfBtn">PDF ডাউনলোড</button>
+          </div>
+          <label class="toggle-label">
+            <input type="checkbox" id="toggleFourth" checked>
+            চতুর্থ বিষয়ের জিপিএ দেখান
+          </label>
+        </div>
+
+        <div class="results">
+          <div class="pill" id="summary">
+            <div><b class="highlight">সারাংশ</b></div>
+            <div class="small muted" id="summaryText">বিষয়গুলো পূরণ করুন এবং <b>গণনা</b> ক্লিক করুন।</div>
+          </div>
+          <div class="pill" id="without4th">
+            <div><b>চতুর্থ বিষয় ছাড়া জিপিএ</b> <span class="small muted">(৯টি প্রধান বিষয়ের যোগফল ÷ ৯)</span></div>
+            <div id="gpaBase" style="font-size:28px;margin-top:4px">—</div>
+          </div>
+          <div class="pill" id="with4th">
+            <div><b>চতুর্থ বিষয়ের নিয়ম সহ জিপিএ</b> <span class="small muted">(+বোনাস তারপর ÷ ৯)</span></div>
+            <div id="gpaWith" style="font-size:28px;margin-top:4px">—</div>
+            <div class="note" id="bonusNote"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        গ্রেড ম্যাপিং: A+ = ৫.০, A = ৪.০, A- = ৩.৫, B = ৩.০, C = ২.০, D = ১.০, F = ০.০। যদি ৯টি প্রধান বিষয়ের মধ্যে কোনোটিতে F থাকে, জিপিএ = ০.০০।
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { jsPDF } = window.jspdf;
+    const gradePoints = {
+      'A+': 5.0,
+      'A': 4.0,
+      'A-': 3.5,
+      'B': 3.0,
+      'C': 2.0,
+      'D': 1.0,
+      'F': 0.0
+    };
+    const grades = Object.keys(gradePoints);
+    const subjectGroups = {
+      'General': [
+        'Bangla',
+        'English',
+        'Mathematics',
+        'Information & Communication Technology'
+      ],
+      'Religious': [
+        'Islam & Moral Education',
+        'Hindu Religion & Moral Education'
+      ],
+      'Science': [
+        'Bangladesh And Global Studies',
+        'Physics',
+        'Chemistry',
+        'Biology'
+      ],
+      'Arts': [
+        'Science',
+        'History Of Bangladesh & World Civilization',
+        'Geography And Environment',
+        'Economics',
+        'Sociology'
+      ],
+      'Commerce': [
+        'Accountancy',
+        'Business Studies',
+        'Environmental Studies'
+      ],
+      'Fourth Subject': [
+        'Higher Mathematics',
+        'Agriculture Studies',
+        'Others'
+      ]
+    };
+    const defaultSubjects = {
+      science: [
+        'Bangla',
+        'English',
+        'Mathematics',
+        'Information & Communication Technology',
+        'Islam & Moral Education',
+        'Bangladesh And Global Studies',
+        'Physics',
+        'Chemistry',
+        'Biology',
+        'Higher Mathematics'
+      ],
+      arts: [
+        'Bangla',
+        'English',
+        'Mathematics',
+        'Information & Communication Technology',
+        'Islam & Moral Education',
+        'Science',
+        'History Of Bangladesh & World Civilization',
+        'Geography And Environment',
+        'Economics',
+        'Agriculture Studies'
+      ],
+      commerce: [
+        'Bangla',
+        'English',
+        'Mathematics',
+        'Information & Communication Technology',
+        'Islam & Moral Education',
+        'Accountancy',
+        'Business Studies',
+        'Environmental Studies',
+        'Economics',
+        'Higher Mathematics'
+      ]
+    };
+
+    const rowsEl = document.getElementById('rows');
+    const calcBtn = document.getElementById('calcBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const csvBtn = document.getElementById('csvBtn');
+    const pdfBtn = document.getElementById('pdfBtn');
+    const toggleFourth = document.getElementById('toggleFourth');
+    const themeBtn = document.getElementById('themeBtn');
+    const categorySelect = document.getElementById('categorySelect');
+    const gpaBaseEl = document.getElementById('gpaBase');
+    const gpaWithEl = document.getElementById('gpaWith');
+    const bonusNoteEl = document.getElementById('bonusNote');
+    const summaryText = document.getElementById('summaryText');
+    const with4thEl = document.getElementById('with4th');
+
+    // Theme handling
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      themeBtn.textContent = theme === 'dark' ? 'Light Theme' : 'Dark Theme';
+      localStorage.setItem('theme', theme);
+    }
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    function createRow(i, defaultSubject = 'Select Subject') {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <select class="subject-select">
+            <option value="Select Subject">Select Subject</option>
+            ${Object.entries(subjectGroups).map(([group, subjects]) => `
+              <optgroup label="${group}">
+                ${subjects.map(s => `<option value="${s}" ${s === defaultSubject ? 'selected' : ''}>${s}</option>`).join('')}
+              </optgroup>
+            `).join('')}
+          </select>
+        </td>
+        <td>
+          <select>
+            ${grades.map(g => `<option value="${g}">${g}</option>`).join('')}
+          </select>
+        </td>
+        <td style="text-align:center"><input type="radio" name="fourth" ${i === 9 ? 'checked' : ''}></td>
+        <td class="muted" data-points>0.0</td>
+      `;
+      return tr;
+    }
+
+    // Build 10 rows with no default subjects initially
+    function initializeRows() {
+      rowsEl.innerHTML = '';
+      for (let i = 0; i < 10; i++) {
+        rowsEl.appendChild(createRow(i));
+      }
+      updateDisabledSubjects();
+    }
+    initializeRows();
+
+    // Update rows based on category
+    function updateRowsForCategory(category) {
+      rowsEl.innerHTML = '';
+      const subjects = defaultSubjects[category] || Array(10).fill('Select Subject');
+      for (let i = 0; i < 10; i++) {
+        rowsEl.appendChild(createRow(i, subjects[i]));
+      }
+      updateDisabledSubjects();
+    }
+
+    categorySelect.addEventListener('change', () => {
+      const category = categorySelect.value;
+      if (category !== 'none') {
+        updateRowsForCategory(category);
+      } else {
+        initializeRows();
+      }
+    });
+
+    function updateDisabledSubjects() {
+      const selects = [...rowsEl.querySelectorAll('.subject-select')];
+      const selectedValues = selects.map(select => select.value).filter(val => val !== 'Select Subject');
+      selects.forEach((select, idx) => {
+        const options = select.querySelectorAll('option');
+        options.forEach(option => {
+          if (option.value !== 'Select Subject') {
+            option.disabled = selectedValues.includes(option.value) && select.value !== option.value;
+          }
+        });
+      });
+    }
+
+    function getData() {
+      const data = [];
+      const trs = [...rowsEl.querySelectorAll('tr')];
+      let hasInvalidSubject = false;
+      trs.forEach((tr, idx) => {
+        const name = tr.querySelector('.subject-select').value;
+        if (name === 'Select Subject') {
+          hasInvalidSubject = true;
+        }
+        const grade = tr.querySelector('select:not(.subject-select)').value;
+        const isFourth = tr.querySelector('input[type="radio"]').checked;
+        const pts = gradePoints[grade];
+        data.push({ name, grade, pts, isFourth });
+        tr.querySelector('[data-points]').textContent = pts.toFixed(1);
+      });
+      if (hasInvalidSubject) {
+        alert('অনুগ্রহ করে সব বিষয় নির্বাচন করুন।');
+        return null;
+      }
+      return data;
+    }
+
+    function calculate() {
+      const data = getData();
+      if (!data) return null;
+      let fourthIndex = data.findIndex(d => d.isFourth);
+      if (fourthIndex === -1) {
+        alert('অনুগ্রহ করে একটি বিষয়কে চতুর্থ (ঐচ্ছিক) বিষয় হিসেবে চিহ্নিত করুন।');
+        return null;
+      }
+      const fourth = data[fourthIndex];
+      const mains = data.filter((_, i) => i !== fourthIndex);
+
+      const failInMain = mains.some(m => m.pts === 0);
+      const sumMain = mains.reduce((a, b) => a + b.pts, 0);
+
+      let gpaBase = failInMain ? 0 : (sumMain / 9);
+      gpaBase = Math.min(5, gpaBase);
+
+      let bonus = 0;
+      if (fourth.pts >= 3) {
+        bonus = fourth.pts - 2;
+      }
+      let totalWith = sumMain + bonus;
+      let gpaWith = failInMain ? 0 : (totalWith / 9);
+      gpaWith = Math.min(5, gpaWith);
+
+      gpaBaseEl.textContent = gpaBase.toFixed(2);
+      gpaWithEl.textContent = gpaWith.toFixed(2);
+
+      const without4th = document.getElementById('without4th');
+      const with4th = document.getElementById('with4th');
+      [without4th, with4th].forEach(el => { el.classList.remove('good', 'warn', 'bad') });
+      const cls = (g) => g >= 4.5 ? 'good' : g >= 2.0 ? 'warn' : 'bad';
+      without4th.classList.add(cls(gpaBase));
+      with4th.classList.add(cls(gpaWith));
+
+      bonusNoteEl.textContent = `চতুর্থ বিষয়: ${fourth.name} (${fourth.grade} → ${fourth.pts.toFixed(1)} পয়েন্ট)। বোনাস যোগ করা হয়েছে: ${bonus.toFixed(1)}।`;
+
+      summaryText.innerHTML = `প্রধান বিষয়ের যোগফল: <b>${sumMain.toFixed(1)}</b> | বোনাস: <b>${bonus.toFixed(1)}</b> | বিভাজনের জন্য মোট: <b>${(sumMain + bonus).toFixed(1)}</b>`;
+      return { data, gpaBase, gpaWith, bonus, sumMain };
+    }
+
+    rowsEl.addEventListener('change', (e) => {
+      if (e.target.classList.contains('subject-select')) {
+        updateDisabledSubjects();
+      }
+    });
+
+    csvBtn.addEventListener('click', () => {
+      const result = calculate();
+      if (!result) return;
+      const { data, gpaBase, gpaWith, bonus, sumMain } = result;
+      let csv = 'Subject,Grade,Points,Fourth Subject\n';
+      data.forEach(d => {
+        csv += `"${d.name}","${d.grade}",${d.pts.toFixed(1)},${d.isFourth ? 'Yes' : 'No'}\n`;
+      });
+      csv += `\nMain Subjects Sum,${sumMain.toFixed(1)}\n`;
+      csv += `Fourth Subject Bonus,${bonus.toFixed(1)}\n`;
+      csv += `GPA without Fourth,${gpaBase.toFixed(2)}\n`;
+      csv += `GPA with Fourth,${gpaWith.toFixed(2)}\n`;
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ssc_gpa_results.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    pdfBtn.addEventListener('click', () => {
+      const result = calculate();
+      if (!result) return;
+      const { data, gpaBase, gpaWith, bonus, sumMain } = result;
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text('বাংলাদেশ এসএসসি জিপিএ রিপোর্ট', 20, 20);
+      doc.setFontSize(12);
+      let y = 30;
+      doc.text('বিষয়ের তালিকা:', 20, y);
+      y += 10;
+      data.forEach((d, i) => {
+        doc.text(`${i + 1}. ${d.name}: ${d.grade} (${d.pts.toFixed(1)} পয়েন্ট)${d.isFourth ? ' (চতুর্থ বিষয়)' : ''}`, 20, y);
+        y += 8;
+      });
+      y += 5;
+      doc.text(`প্রধান বিষয়ের যোগফল: ${sumMain.toFixed(1)}`, 20, y);
+      y += 8;
+      doc.text(`চতুর্থ বিষয়ের বোনাস: ${bonus.toFixed(1)}`, 20, y);
+      y += 8;
+      doc.text(`চতুর্থ বিষয় ছাড়া জিপিএ: ${gpaBase.toFixed(2)}`, 20, y);
+      y += 8;
+      doc.text(`চতুর্থ বিষয়ের নিয়ম সহ জিপিএ: ${gpaWith.toFixed(2)}`, 20, y);
+      doc.save('ssc_gpa_results.pdf');
+    });
+
+    toggleFourth.addEventListener('change', () => {
+      with4thEl.style.display = toggleFourth.checked ? 'block' : 'none';
+    });
+
+    resetBtn.addEventListener('click', () => {
+      rowsEl.innerHTML = '';
+      const category = categorySelect.value;
+      if (category !== 'none') {
+        updateRowsForCategory(category);
+      } else {
+        initializeRows();
+      }
+      gpaBaseEl.textContent = '—';
+      gpaWithEl.textContent = '—';
+      bonusNoteEl.textContent = '';
+      summaryText.textContent = 'বিষয়গুলো পূরণ করুন এবং গণনা ক্লিক করুন।';
+      toggleFourth.checked = true;
+      with4thEl.style.display = 'block';
+    });
+
+    calcBtn.addEventListener('click', calculate);
+
+    // Initialize disabled subjects
+    updateDisabledSubjects();
+  </script>
+</body>
+</html>
