@@ -1,1 +1,695 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shofol Academy SSC GPA Calculator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --text: #1f2937;
+      --accent: #0891b2;
+      --good: #16a34a;
+      --warn: #d97706;
+      --bad: #dc2626;
+      --border: #d1d5db;
+      --input-bg: #f9fafb;
+      --input-border: #d1d5db;
+      --secondary-bg: #f3f4f6;
+      --secondary-border: #d1d5db;
+      --pill-bg: rgba(0,0,0,.05);
+      --pill-border: #d1d5db;
+      --good-bg: rgba(22,163,74,.1);
+      --good-border: #15803d;
+      --warn-bg: rgba(217,119,6,.1);
+      --warn-border: #b45309;
+      --bad-bg: rgba(220,38,38,.1);
+      --bad-border: #b91c1c;
+      --hero-bg: #e0f2fe;
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --card: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #22d3ee;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --border: #1f2937;
+      --input-bg: #0b1222;
+      --input-border: #23304a;
+      --secondary-bg: #0b1222;
+      --secondary-border: #22304a;
+      --pill-bg: rgba(255,255,255,.04);
+      --pill-border: #1f2a44;
+      --good-bg: rgba(34,197,94,.08);
+      --good-border: #1d3e2a;
+      --warn-bg: rgba(245,158,11,.08);
+      --warn-border: #3a2f12;
+      --bad-bg: rgba(239,68,68,.08);
+      --bad-border: #3a1212;
+      --hero-bg: #164e63;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0 }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+      background: linear-gradient(180deg, var(--bg), var(--bg));
+      color: var(--text);
+      padding-top: 50px;
+      width: 100%;
+    }
+    .header {
+      background: #f7faff;
+      /*padding: 10px;*/
+      text-align: center;
+    }
+
+    .wrap {
+      max-width: 100%;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .card {
+      background: #f7faff;
+      padding: 16px;
+      border-radius: 12px;
+      margin: 0;
+    }
+    h1 { font-size: 24px; margin: 0 0 6px }
+    p.lead { margin: 0 0 16px; color: var(--muted); text-align: center }
+    table { width: 100%; border-collapse: collapse; border-spacing: 0 }
+    thead th { font-weight: 600; color: var(--muted); text-align: left; padding: 6px }
+    tbody tr { background: var(--pill-bg); border-radius: 8px }
+    tbody td { padding: 8px }
+    tbody tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px }
+    tbody tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px }
+    select { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text); padding: 6px; border-radius: 8px; outline: none; font-size: 14px }
+    input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); transform: scale(1.1) }
+    .muted { color: var(--muted) }
+    .controls {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 10px;
+    }
+    button {
+      background: linear-gradient(90deg, var(--accent), var(--accent));
+      color: #02131a;
+      border: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+    }
+    button.secondary {
+      background: var(--secondary-bg);
+      color: var(--text);
+      border: 1px solid var(--secondary-border);
+    }
+    #csvBtn, #pdfBtn { display: none }
+    .results { display: grid; gap: 10px;width: 100%;max-width: 400px;}
+    .pill { padding: 10px 12px; border-radius: 8px; background: var(--pill-bg); border: 1px solid var(--pill-border) }
+    .good { border-color: var(--good-border); background: var(--good-bg) }
+    .warn { border-color: var(--warn-border); background: var(--warn-bg) }
+    .bad { border-color: var(--bad-border); background: var(--bad-bg) }
+    .note { font-size: 12px; color: var(--muted) }
+    .small { font-size: 12px }
+    .footer { margin-top: 10px; color: var(--muted); font-size: 12px; text-align: center }
+    .site-footer {
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 15px 10px;
+      text-align: center;
+    }
+    .site-footer .logo {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .site-footer p { margin: 4px 0; color: var(--muted) }
+    .site-footer a { color: var(--accent); text-decoration: none }
+    .highlight { color: var(--accent) }
+    .toggle-label { display: flex; align-items: center; gap: 6px; color: var(--text); margin-top: 10px }
+    .theme-toggle { padding: 4px 8px; font-size: 10px }
+    .category-select { margin-bottom: 12px; width: 100%; max-width: 100% }
+
+
+    /* Mobile Responsiveness */
+    @media (max-width: 600px) {
+      .header {
         text-align: center;
+      }
+      .header .logo, .header h1, .header .theme-toggle {
+        margin: 4px 0;
+      }
+      .wrap { padding: 0 }
+      .card { padding: 0 }
+      table { font-size: 14px }
+      thead th, tbody td { padding: 6px }
+      button { padding: 8px; font-size: 14px }
+      .results { font-size: 14px }
+      .pill { padding: 8px }
+    }
+
+    /* Desktop Padding */
+    @media (min-width: 600px) {
+      .card { padding: 50px 20px }
+      .site-footer { padding: 20px 10px }
+    }
+
+    /* Customize */
+    body {
+      padding-top: 0;
+    }
+    .hero {
+        background: #eeebed;
+        text-align: center;
+    }
+    .hero img {
+        width: 100%;
+        max-width: 600px;
+    }
+
+
+  .title-hero {
+      text-align: center;
+      background: #f7faff;
+      padding: 50px 0 0 0;
+  }
+
+  .title-hero a {
+      color: #0891b2;
+      font-size: 42px;
+      text-decoration: none;
+      font-weight: bold;
+  }
+
+
+    .grid {
+        gap: 12px;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        max-width: 1200px;
+        margin: auto;
+        margin-bottom: 20px;
+    }
+    .grid .card {
+        width: 100%;background: #eaedf2;box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    }
+    button#themeBtn {
+        width: 150px;
+        padding: 14px;
+        font-size: 14px;
+    }
+    button#calcBtn {
+        color: #fff;
+    }
+    select#categorySelect {
+        max-width: 320px;
+        margin-top: 20px;
+        margin-bottom: 40px;
+        border-radius: 4px;
+        padding: 8px;
+        background: #0891b2;
+        color: #ffffff;
+        font-size: 16px;
+    }
+
+    .footer {
+      margin-top: 40px;
+    }
+      .footer p.lead  {
+        font-size: 16px;
+        margin-top: 20px;
+      }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 600px) {
+      .grid {
+          display: block;
+      }
+      .grid .card,
+      .grid .results {
+          width: 100%;
+      }
+      .title-hero a {
+        font-size: 24px;
+      }
+      .title-hero p {
+        padding: 10px 0;
+      }
+      .footer p.lead span {
+          display: block;
+          padding: 16px 6px;
+      }
+      .footer {
+        margin: 0 5px;
+      }
+    }
+
+    .top-promotion {
+      padding: 16px 10px;
+      text-align: center;
+      background-color: #9c579b;
+      color: #ffffff;
+    }
+    .top-promotion a {
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-promotion">
+    <p>আমরা <b>HSC ICT পড়াই</b> — সহজভাবে, প্র্যাকটিক্যালভাবে। 📞 যোগাযোগ: <a href="https://www.facebook.com/shofol.academy">Shofol Academy</a></p>
+    <!-- <p>আমরা <b>HSC ICT পড়াই</b> — সহজভাবে, প্র্যাকটিক্যালভাবে। 📞 যোগাযোগ: <a href="tel:8801862521286">01862-521286</a>, <a href="tel:8801777132423">01777-132423</a></p> -->
+  </div>
+
+  <div class="hero">
+    <img src="https://eliteabu.com/wp-content/uploads/2025/08/shofol-academy-cover.png">
+  </div>
+
+  <div class="header">
+    <!-- Please don't remove below line -->
+    <button class="secondary theme-toggle" id="themeBtn" style="display: none;">Dark Theme</button>
+    <!-- //Please don't remove top line -->
+
+  </div>
+
+  <div class="wrap">
+
+
+    <div class="title-hero">
+      <a href="https://www.facebook.com/shofol.academy" target="_blank">SSC Point Calculator (With & Without 4th Subject)</a>
+        <p>Your trusted partner for SSC preparation and ICT education</p>
+    </div>
+
+    <div class="card">
+      
+      <div style="text-align: center;">
+        <select id="categorySelect" class="category-select">
+          <option value="none" selected>Select Group</option>
+          <option value="science">Science/বিজ্ঞান</option>
+          <option value="arts"> Humanities/মানবিক</option>
+          <option value="commerce">Business Studies/ব্যবসায় শিক্ষা</option>
+        </select>
+      </div>
+
+      <div class="grid">
+        <div class="card" style="padding:10px">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40%">বিষয়ের নাম</th>
+                <th style="width:30%">গ্রেড</th>
+                <th style="width:20%">চতুর্থ বিষয়?</th>
+                <th style="width:10%" class="muted">পয়েন্ট</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <div class="controls">
+            <button id="calcBtn">জিপিএ গণনা</button>
+            <button class="secondary" id="resetBtn">রিসেট</button>
+            <button class="secondary" id="csvBtn">CSV ডাউনলোড</button>
+            <button class="secondary" id="pdfBtn">PDF ডাউনলোড</button>
+          </div>
+          <label class="toggle-label">
+            <input type="checkbox" id="toggleFourth" checked>
+            চতুর্থ বিষয়ের জিপিএ দেখান
+          </label>
+        </div>
+
+        <div class="results">
+          <div class="pill" id="summary">
+            <div><b class="highlight">সারাংশ</b></div>
+            <div class="small muted" id="summaryText">বিষয়গুলো পূরণ করুন এবং <b>গণনা</b> ক্লিক করুন।</div>
+          </div>
+          <div class="pill" id="without4th">
+            <div><b>চতুর্থ বিষয় ছাড়া জিপিএ</b> <span class="small muted">(৯টি প্রধান বিষয়ের যোগফল ÷ ৯)</span></div>
+            <div id="gpaBase" style="font-size:24px;margin-top:4px">—</div>
+          </div>
+          <div class="pill" id="with4th">
+            <div><b>চতুর্থ বিষয়ের নিয়ম সহ জিপিএ</b> <span class="small muted">(+বোনাস তারপর ÷ ৯)</span></div>
+            <div id="gpaWith" style="font-size:24px;margin-top:4px">—</div>
+            <div class="note" id="bonusNote"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        গ্রেড ম্যাপিং: A+ = ৫.০, A = ৪.০, A- = ৩.৫, B = ৩.০, C = ২.০, D = ১.০, F = ০.০। যদি ৯টি প্রধান বিষয়ের মধ্যে কোনোটিতে F থাকে, জিপিএ = ০.০০।
+        
+        <p class="lead">১০টি বিষয় নির্বাচন করুন: ৯টি প্রধান বিষয় এবং <b>১টি চতুর্থ (ঐচ্ছিক) বিষয়</b>। জিপিএ ৫.০০ এর মধ্যে গণনা করা হয়।
+        <br><span class="small">চতুর্থ বিষয়ের নিয়ম: যদি গ্রেড পয়েন্ট <b>≥ ৩.০</b> হয়, তবে <b>(পয়েন্ট − ২)</b> যোগ করা হয়। যদি < ৩.০ হয়, কোনো বোনাস যোগ হয় না।</span>
+      </p>
+
+      </div>
+    </div>
+
+    <div class="site-footer">
+      <span class="logo"><a href="https://www.facebook.com/shofol.academy" target="_blank">Shofol Academy</a></span>
+      <p  style="margin: 10px 0;"><b>Teachers:</b> <a href="https://www.facebook.com/raihanbabubd" target="_blank">Raihan</a> & <a href="https://www.facebook.com/ashimmollick.choto" target="_blank">Ashim</a><!-- (01862521286, 01777132423) --></p>
+
+      <p style="margin: 10px 0;"><b>আমরা HSC ICT পড়াই — সহজভাবে, প্র্যাকটিক্যালভাবে।</b></p>
+
+      <div class="footer-bottom">
+        <a href="https://www.facebook.com/raihanbabubd" target="_blank">Contribution by Raihan</a> | <a href="https://www.facebook.com/raihanbabubd" target="_blank">Grok</a> | <a href="https://www.facebook.com/shofol.academy" target="_blank">Visit us on Facebook</a>
+      </div>
+    </div>
+
+    
+  </div>
+
+  <script>
+    const { jsPDF } = window.jspdf;
+    const gradePoints = {
+      'A+': 5.0,
+      'A': 4.0,
+      'A-': 3.5,
+      'B': 3.0,
+      'C': 2.0,
+      'D': 1.0,
+      'F': 0.0
+    };
+    const grades = Object.keys(gradePoints);
+    const subjectGroups = {
+      'General': [
+        'Bangla',
+        'English',
+        'Mathematics',
+        'Information & Communication Technology'
+      ],
+      'Religious': [
+        'Islam & Moral Education',
+        'Hindu Religion & Moral Education'
+      ],
+      'Science': [
+        'Bangladesh And Global Studies',
+        'Physics',
+        'Chemistry',
+        'Biology'
+      ],
+      'Arts': [
+        'Science',
+        'History Of Bangladesh & World Civilization',
+        'Geography And Environment',
+        'Economics',
+        'Sociology',
+        'Others'
+      ],
+      'Commerce': [
+        'Science',
+        'Business Entrepreneurship',
+        'Accounting',
+        'Finance And Banking',
+        'Others'
+      ],
+      'Fourth Subject': [
+        'Higher Mathematics',
+        'Agriculture Studies',
+        'Others'
+      ]
+    };
+    const defaultSubjects = {
+      science: [
+        'Bangla',
+        'English',
+        'Mathematics',
+        'Information & Communication Technology',
+        'Islam & Moral Education',
+        'Bangladesh And Global Studies',
+        'Physics',
+        'Chemistry',
+        'Biology',
+        'Higher Mathematics'
+      ],
+      arts: [
+        'Bangla',
+        'English',
+        'Mathematics',
+        'Information & Communication Technology',
+        'Islam & Moral Education',
+        'Science',
+        'History Of Bangladesh & World Civilization',
+        'Geography And Environment',
+        'Economics',
+        'Agriculture Studies'
+      ],
+      commerce: [
+        'Bangla',
+        'English',
+        'Mathematics',
+        'Science',
+        'Islam & Moral Education',
+        'Business Entrepreneurship',
+        'Accounting',
+        'Finance And Banking',
+        'Information & Communication Technology',
+        'Agriculture Studies'
+      ]
+    };
+
+    const rowsEl = document.getElementById('rows');
+    const calcBtn = document.getElementById('calcBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const csvBtn = document.getElementById('csvBtn');
+    const pdfBtn = document.getElementById('pdfBtn');
+    const toggleFourth = document.getElementById('toggleFourth');
+    const themeBtn = document.getElementById('themeBtn');
+    const categorySelect = document.getElementById('categorySelect');
+    const gpaBaseEl = document.getElementById('gpaBase');
+    const gpaWithEl = document.getElementById('gpaWith');
+    const bonusNoteEl = document.getElementById('bonusNote');
+    const summaryText = document.getElementById('summaryText');
+    const with4thEl = document.getElementById('with4th');
+
+    // Theme handling
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      themeBtn.textContent = theme === 'dark' ? 'Light Theme' : 'Dark Theme';
+      localStorage.setItem('theme', theme);
+    }
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    function createRow(i, defaultSubject = 'Select Subject') {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <select class="subject-select">
+            <option value="Select Subject">Select Subject</option>
+            ${Object.entries(subjectGroups).map(([group, subjects]) => `
+              <optgroup label="${group}">
+                ${subjects.map(s => `<option value="${s}" ${s === defaultSubject ? 'selected' : ''}>${s}</option>`).join('')}
+              </optgroup>
+            `).join('')}
+          </select>
+        </td>
+        <td>
+          <select>
+            ${grades.map(g => `<option value="${g}">${g}</option>`).join('')}
+          </select>
+        </td>
+        <td style="text-align:center"><input type="radio" name="fourth" ${i === 9 ? 'checked' : ''}></td>
+        <td class="muted" data-points>0.0</td>
+      `;
+      return tr;
+    }
+
+    function initializeRows() {
+      rowsEl.innerHTML = '';
+      for (let i = 0; i < 10; i++) {
+        rowsEl.appendChild(createRow(i));
+      }
+      updateDisabledSubjects();
+    }
+    initializeRows();
+
+    function updateRowsForCategory(category) {
+      rowsEl.innerHTML = '';
+      const subjects = defaultSubjects[category] || Array(10).fill('Select Subject');
+      for (let i = 0; i < 10; i++) {
+        rowsEl.appendChild(createRow(i, subjects[i]));
+      }
+      updateDisabledSubjects();
+    }
+
+    categorySelect.addEventListener('change', () => {
+      const category = categorySelect.value;
+      if (category !== 'none') {
+        updateRowsForCategory(category);
+      } else {
+        initializeRows();
+      }
+    });
+
+    function updateDisabledSubjects() {
+      const selects = [...rowsEl.querySelectorAll('.subject-select')];
+      const selectedValues = selects.map(select => select.value).filter(val => val !== 'Select Subject');
+      selects.forEach((select, idx) => {
+        const options = select.querySelectorAll('option');
+        options.forEach(option => {
+          if (option.value !== 'Select Subject') {
+            option.disabled = selectedValues.includes(option.value) && select.value !== option.value;
+          }
+        });
+      });
+    }
+
+    function getData() {
+      const data = [];
+      const trs = [...rowsEl.querySelectorAll('tr')];
+      let hasInvalidSubject = false;
+      trs.forEach((tr, idx) => {
+        const name = tr.querySelector('.subject-select').value;
+        if (name === 'Select Subject') {
+          hasInvalidSubject = true;
+        }
+        const grade = tr.querySelector('select:not(.subject-select)').value;
+        const isFourth = tr.querySelector('input[type="radio"]').checked;
+        const pts = gradePoints[grade];
+        data.push({ name, grade, pts, isFourth });
+        tr.querySelector('[data-points]').textContent = pts.toFixed(1);
+      });
+      if (hasInvalidSubject) {
+        alert('অনুগ্রহ করে সব বিষয় নির্বাচন করুন।');
+        return null;
+      }
+      return data;
+    }
+
+    function calculate() {
+      const data = getData();
+      if (!data) return null;
+      let fourthIndex = data.findIndex(d => d.isFourth);
+      if (fourthIndex === -1) {
+        alert('অনুগ্রহ করে একটি বিষয়কে চতুর্থ (ঐচ্ছিক) বিষয় হিসেবে চিহ্নিত করুন।');
+        return null;
+      }
+      const fourth = data[fourthIndex];
+      const mains = data.filter((_, i) => i !== fourthIndex);
+
+      const failInMain = mains.some(m => m.pts === 0);
+      const sumMain = mains.reduce((a, b) => a + b.pts, 0);
+
+      let gpaBase = failInMain ? 0 : (sumMain / 9);
+      gpaBase = Math.min(5, gpaBase);
+
+      let bonus = 0;
+      if (fourth.pts >= 3) {
+        bonus = fourth.pts - 2;
+      }
+      let totalWith = sumMain + bonus;
+      let gpaWith = failInMain ? 0 : (totalWith / 9);
+      gpaWith = Math.min(5, gpaWith);
+
+      gpaBaseEl.textContent = gpaBase.toFixed(2);
+      gpaWithEl.textContent = gpaWith.toFixed(2);
+
+      const without4th = document.getElementById('without4th');
+      const with4th = document.getElementById('with4th');
+      [without4th, with4th].forEach(el => { el.classList.remove('good', 'warn', 'bad') });
+      const cls = (g) => g >= 4.5 ? 'good' : g >= 2.0 ? 'warn' : 'bad';
+      without4th.classList.add(cls(gpaBase));
+      with4th.classList.add(cls(gpaWith));
+
+      bonusNoteEl.textContent = `চতুর্থ বিষয়: ${fourth.name} (${fourth.grade} → ${fourth.pts.toFixed(1)} পয়েন্ট)। বোনাস যোগ করা হয়েছে: ${bonus.toFixed(1)}।`;
+
+      summaryText.innerHTML = `প্রধান বিষয়ের যোগফল: <b>${sumMain.toFixed(1)}</b> | বোনাস: <b>${bonus.toFixed(1)}</b> | বিভাজনের জন্য মোট: <b>${(sumMain + bonus).toFixed(1)}</b>`;
+      return { data, gpaBase, gpaWith, bonus, sumMain };
+    }
+
+    rowsEl.addEventListener('change', (e) => {
+      if (e.target.classList.contains('subject-select')) {
+        updateDisabledSubjects();
+      }
+    });
+
+    csvBtn.addEventListener('click', () => {
+      const result = calculate();
+      if (!result) return;
+      const { data, gpaBase, gpaWith, bonus, sumMain } = result;
+      let csv = 'Subject,Grade,Points,Fourth Subject\n';
+      data.forEach(d => {
+        csv += `"${d.name}","${d.grade}",${d.pts.toFixed(1)},${d.isFourth ? 'Yes' : 'No'}\n`;
+      });
+      csv += `\nMain Subjects Sum,${sumMain.toFixed(1)}\n`;
+      csv += `Fourth Subject Bonus,${bonus.toFixed(1)}\n`;
+      csv += `GPA without Fourth,${gpaBase.toFixed(2)}\n`;
+      csv += `GPA with Fourth,${gpaWith.toFixed(2)}\n`;
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ssc_gpa_results.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    pdfBtn.addEventListener('click', () => {
+      const result = calculate();
+      if (!result) return;
+      const { data, gpaBase, gpaWith, bonus, sumMain } = result;
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text('<a href="https://www.facebook.com/shofol.academy" target="_blank">Shofol Academy</a> SSC GPA Report', 10, 20);
+      doc.setFontSize(12);
+      let y = 30;
+      doc.text('Subject List:', 10, y);
+      y += 10;
+      data.forEach((d, i) => {
+        doc.text(`${i + 1}. ${d.name}: ${d.grade} (${d.pts.toFixed(1)} Points)${d.isFourth ? ' (Fourth Subject)' : ''}`, 10, y);
+        y += 8;
+      });
+      y += 5;
+      doc.text(`Main Subjects Sum: ${sumMain.toFixed(1)}`, 10, y);
+      y += 8;
+      doc.text(`Fourth Subject Bonus: ${bonus.toFixed(1)}`, 10, y);
+      y += 8;
+      doc.text(`GPA without Fourth: ${gpaBase.toFixed(2)}`, 10, y);
+      y += 8;
+      doc.text(`GPA with Fourth: ${gpaWith.toFixed(2)}`, 10, y);
+      y += 10;
+      doc.text('Powered by <a href="https://www.facebook.com/shofol.academy" target="_blank">Shofol Academy</a> - আমরা HSC ICT পড়াই — সহজভাবে, প্র্যাকটিক্যালভাবে।', 10, y);
+      doc.save('shofol_academy_ssc_gpa_results.pdf');
+    });
+
+    toggleFourth.addEventListener('change', () => {
+      with4thEl.style.display = toggleFourth.checked ? 'block' : 'none';
+    });
+
+    resetBtn.addEventListener('click', () => {
+      rowsEl.innerHTML = '';
+      const category = categorySelect.value;
+      if (category !== 'none') {
+        updateRowsForCategory(category);
+      } else {
+        initializeRows();
+      }
+      gpaBaseEl.textContent = '—';
+      gpaWithEl.textContent = '—';
+      bonusNoteEl.textContent = '';
+      summaryText.textContent = 'বিষয়গুলো পূরণ করুন এবং গণনা ক্লিক করুন।';
+      toggleFourth.checked = true;
+      with4thEl.style.display = 'block';
+    });
+
+    calcBtn.addEventListener('click', calculate);
+
+    // Initialize disabled subjects
+    updateDisabledSubjects();
+  </script>
+</body>
+</html>
